@@ -10,7 +10,12 @@ const User = mongoose.model(
         points: Number,
     })
 );
-
+const AllowedChannel = mongoose.model(
+    "AllowedChannel",
+    new mongoose.Schema({
+        channelId: String,
+    })
+);
 module.exports = {
     findUser: async (discordId) => {
         return await User.findOne({ discordId: discordId });
@@ -37,5 +42,17 @@ module.exports = {
 
     deleteUser: async (discordId) => {
         return await User.deleteOne({ discordId: discordId });
+    },
+
+    saveAllowedChannel: async (channelId) => {
+        const channel = new AllowedChannel({ channelId: channelId });
+        return await channel.save();
+    },
+
+    deleteAllowedChannel: async (channelId) => {
+        return await AllowedChannel.deleteOne({ channelId: channelId });
+    },
+    getAllAllowedChannels: async () => {
+        return await AllowedChannel.find({});
     },
 };

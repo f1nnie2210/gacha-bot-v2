@@ -1,16 +1,20 @@
-const { Client, IntentsBitField } = require("discord.js");
+const { Client, GatewayIntentBits, Partials  } = require("discord.js");
 const mongoose = require("mongoose");
 const eventHandler = require("./handlers/eventHandler");
 const dotenv = require("dotenv");
 dotenv.config();
 
 const client = new Client({
+    partials: [
+        Partials.Channel, // for text channel
+        Partials.GuildMember, // for guild member
+        Partials.User, // for discord user
+    ],
     intents: [
-        IntentsBitField.Flags.Guilds,
-        IntentsBitField.Flags.GuildMembers,
-        IntentsBitField.Flags.GuildMessages,
-        IntentsBitField.Flags.GuildPresences,
-        IntentsBitField.Flags.MessageContent,
+        GatewayIntentBits.Guilds, // for guild related things
+        GatewayIntentBits.GuildMembers, // for guild members related things
+        GatewayIntentBits.GuildIntegrations, // for discord Integrations
+        GatewayIntentBits.GuildVoiceStates, // for voice related things
     ],
 });
 
