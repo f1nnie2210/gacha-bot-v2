@@ -3,7 +3,7 @@ const {
     saveAllowedChannel,
     deleteAllowedChannel,
     getAllAllowedChannels,
-} = require("../../db/operations.js");
+} = require("../../db/operations");
 
 module.exports = {
     name: "settings",
@@ -45,12 +45,13 @@ module.exports = {
         // Check if the user has admin permissions
         if (
             !interaction.member.permissions.has(
-                PermissionsBitField.Flags.ADMINISTRATOR
+                PermissionsBitField.Flags.Administrator
             )
         ) {
-            return interaction.reply(
-                "You do not have permission to use this command."
-            );
+            return interaction.reply({
+                content: "You do not have permission to use this command.",
+                ephemeral: true,
+            });
         }
 
         const subCommand = interaction.options.getSubcommand();

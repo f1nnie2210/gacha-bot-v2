@@ -16,14 +16,22 @@ const AllowedChannel = mongoose.model(
         channelId: String,
     })
 );
+const nameRegex = /^[a-zA-Z0-9]+(_[a-zA-Z0-9]+)*$/;
+
 module.exports = {
     findUser: async (discordId) => {
         return await User.findOne({ discordId: discordId });
     },
-
     createUser: async (discordId, name, inGameName) => {
         // Check if the inGameName is already in use
-        const existingUser = await User.findOne({ inGameName: inGameName });
+        if (!nameRegex.test(inGameName)) {
+            throw new Error(
+                "Invalid in-game name. It should be in the form of 'name_name'."
+            );
+        }
+        const existingUser = await User.findOne({
+            inGameName: { $regex: new RegExp(`^${inGameName}$`, "i") },
+        });
         if (existingUser) {
             throw new Error("This in-game name is already in use.");
         }
@@ -37,9 +45,23 @@ module.exports = {
         return await user.save();
     },
     updateUser: async (discordId, updates) => {
+        if (updates.inGameName && !nameRegex.test(updates.inGameName)) {
+            throw new Error(
+                "Invalid in-game name. It should be in the form of 'name_name'."
+            );
+        }
+        if (updates.inGameName) {
+            const existingUser = await User.findOne({
+                inGameName: {
+                    $regex: new RegExp(`^${updates.inGameName}$`, "i"),
+                },
+            });
+            if (existingUser && existingUser.discordId !== discordId) {
+                throw new Error("This in-game name is already in use.");
+            }
+        }
         return await User.updateOne({ discordId: discordId }, updates);
     },
-
     deleteUser: async (discordId) => {
         return await User.deleteOne({ discordId: discordId });
     },
