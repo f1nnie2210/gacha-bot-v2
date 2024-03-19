@@ -14,6 +14,7 @@ module.exports = (client) => {
         const eventName = eventFolder.replace(/\\/g, "/").split("/").pop();
 
         client.on(eventName, async (arg) => {
+            client.application.commands.set([]);
             for (const eventFile of eventFiles) {
                 const eventFunction = require(eventFile);
                 await eventFunction(client, arg);
