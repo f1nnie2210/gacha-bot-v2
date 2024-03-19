@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, Partials  } = require("discord.js");
+const { Client, GatewayIntentBits, Partials } = require("discord.js");
 const mongoose = require("mongoose");
 const eventHandler = require("./handlers/eventHandler");
 const dotenv = require("dotenv");

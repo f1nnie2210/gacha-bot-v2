@@ -13,4 +13,6 @@ function formatPage(packs) {
     return embed;
 }
 
-module.exports = formatPage;
+module.exports = {
+    formatPage,
+};

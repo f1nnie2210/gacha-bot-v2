@@ -1,14 +1,5 @@
-const dbOperations = require("../../db/operations");
-const cloudinary = require("cloudinary").v2;
 const { Pack, Item } = require("../../db/packSchema");
-const {
-    PermissionsBitField,
-    ActionRowBuilder,
-    ButtonBuilder,
-    ButtonStyle,
-    EmbedBuilder,
-} = require("discord.js");
-const formatPage = require("../../utils/formatting");
+const { PermissionsBitField, PermissionFlagsBits } = require("discord.js");
 
 module.exports = {
     name: "pack",
@@ -32,11 +23,6 @@ module.exports = {
                     required: false,
                 })),
             ],
-        },
-        {
-            name: "list",
-            description: "View all existed packs",
-            type: 1,
         },
 
         {
@@ -72,21 +58,10 @@ module.exports = {
                 },
             ],
         },
-        {
-            name: "view",
-            description: "View an existing pack",
-            type: 1,
-            options: [
-                {
-                    name: "type",
-                    type: 3,
-                    description: "The type of the pack to view",
-                    required: true,
-                },
-            ],
-        },
+
         // Add more command options here...
     ],
+    permissionsRequired: [PermissionFlagsBits.Administrator],
 
     callback: async (client, interaction) => {
         const command = interaction.options.getSubcommand();
@@ -152,20 +127,6 @@ module.exports = {
                 }
                 break;
 
-            case "list":
-                const packs = await Pack.find({});
-                if (!packs.length) {
-                    await interaction.reply({
-                        content: `No packs found.`,
-                        ephemeral: true,
-                    });
-                    return;
-                }
-
-                const embed = formatPage(packs);
-                await interaction.reply({ embeds: [embed] });
-                break;
-
             case "edit":
                 const editType = interaction.options
                     .getString("type")
@@ -218,42 +179,6 @@ module.exports = {
                 await interaction.reply(
                     `Pack **${deleteType}** and all its items have been deleted.`
                 );
-                break;
-
-            case "view":
-                const viewType = interaction.options.getString("type");
-                const packToView = await Pack.findOne({
-                    type: viewType,
-                }).populate("items");
-
-                if (!packToView) {
-                    await interaction.reply({
-                        content: `Pack **${viewType}** does not exist.`,
-                        ephemeral: true,
-                    });
-                    return;
-                }
-
-                const packEmbed = new EmbedBuilder()
-                    .setTitle(`Pack: ${viewType}`)
-                    .setColor(0x0099ff);
-
-                // Display rarity levels with roll rates
-                packToView.rarity.forEach((rarity) => {
-                    packEmbed.addFields({
-                        name: `Rarity level ${rarity.level}`,
-                        value: `${rarity.rollRate}%`,
-                    });
-                });
-
-                // Display items
-                let items = "";
-                packToView.items.forEach((item) => {
-                    items += `${item.name}: Rarity level: ${item.rarity}\n`;
-                });
-                packEmbed.addFields({ name: "Items", value: items });
-
-                await interaction.reply({ embeds: [packEmbed] });
                 break;
             // Handle other subcommands...
         }

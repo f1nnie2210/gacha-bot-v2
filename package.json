@@ -11,6 +11,7 @@
     "author": "f1nnie",
     "license": "ISC",
     "dependencies": {
+        "@devraelfreeze/discordjs-pagination": "^2.7.6",
         "cloudinary": "^2.0.3",
         "discord.js": "^14.12.1",
         "dotenv": "^16.4.5",

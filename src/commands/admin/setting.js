@@ -1,4 +1,4 @@
-const { PermissionsBitField } = require("discord.js");
+const { PermissionFlagsBits } = require("discord.js");
 const {
     saveAllowedChannel,
     deleteAllowedChannel,
@@ -41,19 +41,9 @@ module.exports = {
             type: 1,
         },
     ],
-    callback: async (client, interaction) => {
-        // Check if the user has admin permissions
-        if (
-            !interaction.member.permissions.has(
-                PermissionsBitField.Flags.Administrator
-            )
-        ) {
-            return interaction.reply({
-                content: "You do not have permission to use this command.",
-                ephemeral: true,
-            });
-        }
+    permissionsRequired: [PermissionFlagsBits.Administrator],
 
+    callback: async (client, interaction) => {
         const subCommand = interaction.options.getSubcommand();
 
         switch (subCommand) {
