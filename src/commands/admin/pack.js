@@ -1,5 +1,5 @@
 const { Pack, Item } = require("../../db/packSchema");
-const { PermissionsBitField, PermissionFlagsBits } = require("discord.js");
+const { PermissionFlagsBits } = require("discord.js");
 
 module.exports = {
     name: "pack",
@@ -14,6 +14,13 @@ module.exports = {
                     name: "type",
                     type: 3,
                     description: "The type of the pack",
+                    required: true,
+                },
+                {
+                    name: "points",
+                    type: 4,
+                    description:
+                        "The number of points required to roll the pack",
                     required: true,
                 },
                 ...Array.from({ length: 10 }, (_, i) => ({
@@ -35,6 +42,19 @@ module.exports = {
                     type: 3,
                     description: "The type of the pack to edit",
                     required: true,
+                },
+                {
+                    name: "name",
+                    type: 3,
+                    description: "The new name of the pack",
+                    required: false,
+                },
+                {
+                    name: "points",
+                    type: 4,
+                    description:
+                        "The number of points required to roll the pack",
+                    required: false,
                 },
                 ...Array.from({ length: 10 }, (_, i) => ({
                     name: `rarity-${i + 1}`,
@@ -65,20 +85,11 @@ module.exports = {
 
     callback: async (client, interaction) => {
         const command = interaction.options.getSubcommand();
-        if (
-            ["create", "edit", "delete"].includes(command) &&
-            !interaction.member.permissions.has(
-                PermissionsBitField.Flags.Administrator
-            )
-        ) {
-            return interaction.reply({
-                content: "You do not have permission to use this command.",
-                ephemeral: true,
-            });
-        }
+
         switch (command) {
             case "create":
                 const createType = interaction.options.getString("type");
+                const createPoint = interaction.options.getInteger("points");
                 const existingPack = await Pack.findOne({ type: createType });
                 if (existingPack) {
                     await interaction.reply({
@@ -110,6 +121,7 @@ module.exports = {
 
                 const newPack = new Pack({
                     type: createType,
+                    points: createPoint,
                     rarity: createRarity,
                 });
 
@@ -128,35 +140,78 @@ module.exports = {
                 break;
 
             case "edit":
-                const editType = interaction.options
-                    .getString("type")
-                    .toLowerCase();
-                const editPack = await Pack.findOne({
-                    type: { $regex: new RegExp(editType, "i") },
-                });
-                if (!editPack) {
-                    await interaction.reply({
-                        content: `Pack **${editType}** does not exist.`,
-                        ephemeral: true,
-                    });
-                    return;
-                }
+                try {
+                    const editType = interaction.options.getString("type");
+                    const editPack = await Pack.findOne({ type: editType });
+                    if (!editPack) {
+                        await interaction.reply({
+                            content: `Pack **${editType}** does not exist.`,
+                            ephemeral: true,
+                        });
+                        return;
+                    }
 
-                const editRarity = Array.from({ length: 10 }, (_, i) => {
-                    const rollRate = interaction.options.getNumber(
-                        `rarity-${i + 1}`
+                    const newName = interaction.options.getString("name");
+                    if (newName) {
+                        const existingPack = await Pack.findOne({
+                            type: newName,
+                        });
+                        if (existingPack) {
+                            await interaction.reply({
+                                content: `A pack with the name **${newName}** already exists.`,
+                                ephemeral: true,
+                            });
+                            return;
+                        }
+                        editPack.type = newName;
+                    }
+                    const points = interaction.options.getInteger("points");
+                    if (points !== null) {
+                        editPack.points = points;
+                    }
+
+                    const existingRarity = new Map(
+                        editPack.rarity.map((r) => [r.level, r.rollRate])
                     );
-                    return rollRate !== null
-                        ? { level: i + 1, rollRate }
-                        : null;
-                }).filter(Boolean);
 
-                editPack.rarity = editRarity;
-                await editPack.save();
+                    const editRarity = Array.from({ length: 10 }, (_, i) => {
+                        const rollRate = interaction.options.getNumber(
+                            `rarity-${i + 1}`
+                        );
+                        if (rollRate === 0) {
+                            return null;
+                        }
+                        return rollRate !== null
+                            ? { level: i + 1, rollRate }
+                            : existingRarity.has(i + 1)
+                            ? {
+                                  level: i + 1,
+                                  rollRate: existingRarity.get(i + 1),
+                              }
+                            : null;
+                    }).filter(Boolean);
 
-                await interaction.reply(
-                    `Pack **${editType}** has been updated.`
-                );
+                    const totalRollRate = editRarity.reduce(
+                        (total, r) => total + r.rollRate,
+                        0
+                    );
+
+                    if (totalRollRate > 100) {
+                        await interaction.reply({
+                            content: "The total roll rate cannot exceed 100%.",
+                            ephemeral: true,
+                        });
+                        return;
+                    }
+                    editPack.rarity = editRarity;
+                    await editPack.save();
+
+                    await interaction.reply(
+                        `Pack **${editType}** has been updated.`
+                    );
+                } catch (error) {
+                    console.error(error);
+                }
                 break;
 
             case "delete":

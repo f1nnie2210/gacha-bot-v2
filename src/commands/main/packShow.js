@@ -23,7 +23,12 @@ module.exports = {
         const arrayEmbeds = packs.map((pack) => {
             const embed = new EmbedBuilder()
                 .setTitle(`Pack: ${pack.type}`)
-                .setColor(0x0099ff);
+                .setColor(0x0099ff)
+                .addFields({
+                    name: "Price",
+                    value: `${pack.points} points`,
+                    inline: true,
+                });
 
             pack.rarity.forEach((rarity, index) => {
                 const itemsOfRarity = pack.items.filter(

@@ -58,7 +58,7 @@ module.exports = {
             embeds: arrayEmbeds,
             author: interaction.member.user,
             interaction: interaction,
-            time: 40000,
+            time: 80000,
             disableButtons: false,
             fastSkip: false,
             pageTravel: false,

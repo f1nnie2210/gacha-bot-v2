@@ -9,6 +9,7 @@ const itemSchema = new mongoose.Schema({
 
 const packSchema = new mongoose.Schema({
     type: { type: String, index: true },
+    points: { type: Number, required: true },
     items: [{ type: mongoose.Schema.Types.ObjectId, ref: "Item" }], // array of references to items
     rarity: [
         {

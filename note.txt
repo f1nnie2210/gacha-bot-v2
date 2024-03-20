@@ -1,0 +1,8 @@
+Task:
+- roll system
+- validate each case
+- improve UI
+- optimize previous code
+- upload image via cloudinary
+- payment method system
+- optimize new code
