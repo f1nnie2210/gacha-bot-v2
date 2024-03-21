@@ -1,4 +1,4 @@
-const dbOperations = require("../../db/operations");
+const dbUser = require("../../db/userSchema");
 const { PermissionFlagsBits } = require("discord.js");
 
 module.exports = {
@@ -42,18 +42,17 @@ module.exports = {
 
     callback: async (client, interaction) => {
         const subcommand = interaction.options.getSubcommand();
+        const user = interaction.options.getUser("user");
+        const newInGameName = interaction.options.getString("ingamename");
 
         switch (subcommand) {
             case "edit":
                 try {
-                    const userToEdit = interaction.options.getUser("user");
-                    const newInGameName =
-                        interaction.options.getString("ingamename");
-                    await dbOperations.updateUser(userToEdit.id, {
+                    await dbUser.updateUser(user.id, {
                         inGameName: newInGameName,
                     });
                     interaction.reply(
-                        `In-game name of ${userToEdit.username} has been updated to ${newInGameName}.`
+                        `In-game name of ${user.username} has been updated to ${newInGameName}.`
                     );
                 } catch (error) {
                     interaction.reply({
@@ -62,21 +61,18 @@ module.exports = {
                     });
                 }
                 break;
+
             case "delete":
-                const userToDelete = interaction.options.getUser("user");
-                const userToDeleteExists = await dbOperations.findUser(
-                    userToDelete.id
-                );
-                if (!userToDeleteExists) {
-                    return interaction.reply("This user does not exist.");
-                }
                 try {
-                    await dbOperations.deleteUser(userToDelete.id);
+                    await dbUser.deleteUser(user.id);
                     interaction.reply(
-                        `<@${userToDelete.id}>'s account has been deleted.`
+                        `<@${user.id}>'s account has been deleted.`
                     );
                 } catch (error) {
-                    interaction.reply(error.message);
+                    interaction.reply({
+                        content: error.message,
+                        ephemeral: true,
+                    });
                 }
                 break;
         }

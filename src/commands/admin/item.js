@@ -1,4 +1,10 @@
-const { Pack, Item } = require("../../db/packSchema");
+const {
+    pagination,
+    ButtonTypes,
+    ButtonStyles,
+} = require("@devraelfreeze/discordjs-pagination");
+const dbItem = require("../../db/itemSchema.js");
+const { EmbedBuilder } = require("discord.js");
 const { PermissionFlagsBits } = require("discord.js");
 
 module.exports = {
@@ -41,6 +47,12 @@ module.exports = {
             description: "Create a new item",
             type: 1,
             options: [
+                {
+                    name: "pack",
+                    type: 3,
+                    description: "The type of the pack the item belongs to",
+                    required: true,
+                },
                 {
                     name: "item",
                     type: 3,
@@ -86,6 +98,19 @@ module.exports = {
                 },
             ],
         },
+        {
+            name: "view",
+            description: "View item list as admin interface",
+            type: 1,
+            options: [
+                {
+                    name: "pack",
+                    type: 3,
+                    description: "The type of the pack the item belongs to",
+                    required: true,
+                },
+            ],
+        },
 
         // other subcommands...
     ],
@@ -93,145 +118,141 @@ module.exports = {
 
     callback: async (client, interaction) => {
         const command = interaction.options.getSubcommand();
+        const name = interaction.options.getString("name");
+        const image = interaction.options.getString("image");
+        const rarity = interaction.options.getNumber("rarity");
+        const pack = interaction.options.getString("pack");
+        const item = interaction.options.getString("item");
 
         switch (command) {
             case "create":
-                const itemName = interaction.options.getString("name");
-                const itemImage = interaction.options.getString("image");
-                const itemRarity = interaction.options.getNumber("rarity");
-                const packName = interaction.options.getString("pack");
+                try {
+                    const item = await dbItem.createItem({
+                        name: name,
+                        image: image,
+                        rarity: rarity,
+                        pack: pack,
+                    });
 
-                const pack = await Pack.findOne({ type: packName });
-                if (!pack) {
+                    await interaction.reply(
+                        `Item **${item.name}** has been created in pack **${pack}**.`
+                    );
+                } catch (error) {
                     await interaction.reply({
-                        content: `Pack **${packName}** does not exist.`,
+                        content: error.message,
                         ephemeral: true,
                     });
-                    return;
                 }
-                // Check if an item with the same name already exists
-                const existingItem = await Item.findOne({ name: itemName });
-                if (existingItem) {
-                    await interaction.reply({
-                        content: `An item with the name **${itemName}** already exists.`,
-                        ephemeral: true,
-                    });
-                    return;
-                }
-                // Check if the item's rarity level exists in the pack
-                const rarityExists = pack.rarity.some(
-                    ({ level }) => level === itemRarity
-                );
-                if (!rarityExists) {
-                    await interaction.reply({
-                        content: `Rarity level **${itemRarity}** does not exist in pack **${packName}**.`,
-                        ephemeral: true,
-                    });
-                    return;
-                }
-
-                const item = new Item({
-                    name: itemName,
-                    image: itemImage,
-                    rarity: itemRarity,
-                    pack: pack._id,
-                });
-                pack.items.push(item._id);
-                await pack.save();
-                await item.save();
-
-                await interaction.reply(
-                    `Item **${itemName}** has been created and added to pack **${packName}**.`
-                );
                 break;
 
             case "edit":
-                const itemToEdit = interaction.options.getString("item");
-                const newItemName = interaction.options.getString("name");
-                const newItemImage = interaction.options.getString("image");
-                const newItemRarity = interaction.options.getNumber("rarity");
+                try {
+                    await dbItem.updateItem(item, pack, {
+                        name: name,
+                        image: image,
+                        rarity: rarity,
+                    });
 
-                // Find the item in your database
-                const editItem = await Item.findOne({ name: itemToEdit });
-
-                if (!editItem) {
+                    await interaction.reply(
+                        `Item **${item}** has been updated in pack **${pack}**.`
+                    );
+                } catch (error) {
                     await interaction.reply({
-                        content: `Item **${itemToEdit}** does not exist.`,
+                        content: error.message,
                         ephemeral: true,
                     });
-                    return;
                 }
-
-                // If a new rarity is provided, check if it exists in the pack
-                if (newItemRarity) {
-                    const pack = await Pack.findById(editItem.pack);
-                    const rarityExists = pack.rarity.some(
-                        ({ level }) => level === newItemRarity
-                    );
-
-                    if (!rarityExists) {
-                        await interaction.reply({
-                            content: `Rarity level **${newItemRarity}** does not exist in pack **${pack.type}**.`,
-                            ephemeral: true,
-                        });
-                        return;
-                    }
-
-                    editItem.rarity = newItemRarity;
-                }
-
-                // Update the item's properties if the corresponding option was provided
-                if (newItemName) {
-                    editItem.name = newItemName;
-                }
-                if (newItemImage) {
-                    editItem.image = newItemImage;
-                }
-
-                // Save the updated item to your database
-                await editItem.save();
-
-                await interaction.reply(
-                    `Item **${itemToEdit}** has been updated.`
-                );
                 break;
 
             case "delete":
-                const itemNameToDelete = interaction.options.getString("name");
-                const deletePackName = interaction.options.getString("pack");
-                const deletePack = await Pack.findOne({
-                    type: deletePackName,
-                }).populate("items");
-
-                if (!deletePack) {
+                try {
+                    await dbItem.deleteItem(name, pack);
+                    await interaction.reply(
+                        `Item **${name}** has been deleted from pack **${pack}**.`
+                    );
+                } catch (error) {
                     await interaction.reply({
-                        content: `Pack **${deletePackName}** does not exist.`,
+                        content: error.message,
                         ephemeral: true,
                     });
-                    return;
                 }
+                break;
 
-                const itemToDelete = deletePack.items.find(
-                    (item) => item.name === itemNameToDelete
-                );
+            case "view":
+                const packName = interaction.options.getString("pack");
 
-                if (!itemToDelete) {
+                try {
+                    const { pack, items } = await dbItem.readAllItemsInPack(
+                        packName
+                    );
+
+                    const arrayEmbeds = items.map((item) => {
+                        const rarityRollRate = pack.rarity.find(
+                            (rarity) => rarity.level === item.rarity
+                        ).rollRate;
+
+                        let imageUrl = null;
+                        try {
+                            const url = new URL(item.image);
+                            imageUrl = url.href;
+                        } catch (error) {}
+
+                        const embed = new EmbedBuilder()
+                            .setTitle(`Item name: ${item.name}`)
+                            .addFields({
+                                name: `Pack ID:`,
+                                value: `${pack._id}`,
+                            })
+                            .addFields({
+                                name: `Item ID:`,
+                                value: `${item.id}`,
+                            })
+                            .addFields({
+                                name: `Roll Rate:`,
+                                value: `${rarityRollRate}%`,
+                                inline: true,
+                            })
+                            .addFields({
+                                name: `Rarity:`,
+                                value: `${item.rarity}`,
+                                inline: true,
+                            })
+                            .addFields({
+                                name: `Image link:`,
+                                value: `${item.image}`,
+                            })
+                            .setImage(imageUrl)
+                            .setColor(0x0099ff);
+                        return embed;
+                    });
+
+                    await pagination({
+                        embeds: arrayEmbeds,
+                        author: interaction.member.user,
+                        interaction: interaction,
+                        time: 80000,
+                        disableButtons: true,
+                        fastSkip: false,
+                        pageTravel: true,
+                        buttons: [
+                            {
+                                type: ButtonTypes.previous,
+                                label: "Previous Page",
+                                style: ButtonStyles.Primary,
+                            },
+                            {
+                                type: ButtonTypes.next,
+                                label: "Next Page",
+                                style: ButtonStyles.Success,
+                            },
+                        ],
+                    });
+                } catch (error) {
                     await interaction.reply({
-                        content: `Item **${itemNameToDelete}** does not exist in pack **${deletePackName}**.`,
+                        content: error.message,
                         ephemeral: true,
                     });
-                    return;
                 }
-
-                deletePack.items = deletePack.items.filter(
-                    (item) => item._id !== itemToDelete._id
-                );
-                await deletePack.save();
-                await Item.deleteOne({ _id: itemToDelete._id });
-
-                await interaction.reply(
-                    `Item **${itemNameToDelete}** has been deleted from pack **${deletePackName}**.`
-                );
                 break;
 
             // Handle other subcommands here...

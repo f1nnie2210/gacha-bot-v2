@@ -3,7 +3,7 @@ const {
     ButtonTypes,
     ButtonStyles,
 } = require("@devraelfreeze/discordjs-pagination");
-const { Item, Pack } = require("../../db/packSchema.js");
+const dbItem = require("../../db/itemSchema.js");
 const { EmbedBuilder } = require("discord.js");
 
 module.exports = {
@@ -20,60 +20,63 @@ module.exports = {
     callback: async (client, interaction) => {
         const packName = interaction.options.getString("pack");
 
-        // Find the pack by its name
-        const pack = await Pack.findOne({ type: packName });
+        try {
+            const { pack, items } = await dbItem.readAllItemsInPack(packName);
 
-        if (!pack) {
+            const arrayEmbeds = items.map((item, index) => {
+                const rarityRollRate = pack.rarity.find(
+                    (rarity) => rarity.level === item.rarity
+                ).rollRate;
+
+                let imageUrl = null;
+                try {
+                    const url = new URL(item.image);
+                    imageUrl = url.href;
+                } catch (error) {}
+
+                const embed = new EmbedBuilder()
+                    .setTitle(`Item ${index + 1}: ${item.name}`)
+                    .addFields({
+                        name: `Roll Rate:`,
+                        value: `${rarityRollRate}%`,
+                        inline: true,
+                    })
+                    .addFields({
+                        name: `Rarity:`,
+                        value: `${item.rarity}`,
+                        inline: true,
+                    })
+                    .setImage(imageUrl)
+                    .setColor(0x0099ff);
+                return embed;
+            });
+
+            await pagination({
+                embeds: arrayEmbeds,
+                author: interaction.member.user,
+                interaction: interaction,
+                time: 80000,
+                disableButtons: false,
+                fastSkip: false,
+                pageTravel: true,
+                buttons: [
+                    {
+                        type: ButtonTypes.previous,
+                        label: "Previous Page",
+                        style: ButtonStyles.Primary,
+                    },
+                    {
+                        type: ButtonTypes.next,
+                        label: "Next Page",
+                        style: ButtonStyles.Success,
+                    },
+                ],
+            });
+        } catch (error) {
             await interaction.reply({
-                content: `Pack **${packName}** does not exist.`,
+                content: error.message,
                 ephemeral: true,
             });
-            return;
         }
-
-        const items = await Item.find({ pack: pack._id }).populate("pack");
-        if (!items.length) {
-            await interaction.reply({
-                content: `No items found in pack **${packName}**.`,
-                ephemeral: true,
-            });
-            return;
-        }
-
-        const arrayEmbeds = items.map((item, index) => {
-            const rarityRollRate = pack.rarity.find(
-                (rarity) => rarity.level === item.rarity
-            ).rollRate;
-            const embed = new EmbedBuilder()
-                .setTitle(`Item ${index + 1}: ${item.name}`)
-                .setDescription(
-                    `Rarity: ${item.rarity} - Roll Rate: ${rarityRollRate}%`
-                )
-                .setImage(item.image)
-                .setColor(0x0099ff);
-            return embed;
-        });
-
-        await pagination({
-            embeds: arrayEmbeds,
-            author: interaction.member.user,
-            interaction: interaction,
-            time: 80000,
-            disableButtons: false,
-            fastSkip: false,
-            pageTravel: false,
-            buttons: [
-                {
-                    type: ButtonTypes.previous,
-                    label: "Previous Page",
-                    style: ButtonStyles.Primary,
-                },
-                {
-                    type: ButtonTypes.next,
-                    label: "Next Page",
-                    style: ButtonStyles.Success,
-                },
-            ],
-        });
     },
 };

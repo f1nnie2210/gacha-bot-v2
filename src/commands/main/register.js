@@ -1,4 +1,4 @@
-const dbOperations = require("../../db/operations");
+const dbUser = require("../../db/userSchema");
 
 module.exports = {
     name: "register",
@@ -14,12 +14,9 @@ module.exports = {
 
     callback: async (client, interaction) => {
         const inGameName = interaction.options.getString("ingamename");
-        const existingUser = await dbOperations.findUser(interaction.user.id);
-        if (existingUser) {
-            return interaction.reply("You already have an account.");
-        }
+
         try {
-            await dbOperations.createUser(
+            await dbUser.createUser(
                 interaction.user.id,
                 interaction.user.username,
                 inGameName

@@ -1,5 +1,7 @@
 Task:
-- roll system
+- roll system (x)
+- detach admin - user system each case (x)
+- switch query to db (x)
 - validate each case
 - improve UI
 - optimize previous code

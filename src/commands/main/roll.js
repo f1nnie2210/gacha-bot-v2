@@ -1,6 +1,6 @@
 const { Pack } = require("../../db/packSchema");
-const dbOperations = require("../../db/operations");
-const { EmbedBuilder, UserSelectMenuBuilder } = require("discord.js");
+const dbUser = require("../../db/userSchema");
+const { EmbedBuilder } = require("discord.js");
 const { rollItem } = require("../../handlers/rollHandle");
 
 module.exports = {
@@ -28,7 +28,7 @@ module.exports = {
                 await interaction.reply({ content: message, ephemeral: true });
                 return;
             }
-            const user = await dbOperations.findUser(interaction.user.id);
+            const user = await dbUser.findUser(interaction.user.id);
             if (user.points < pack.points) {
                 await interaction.reply({
                     content: `You don't have enough points to roll this pack.`,
