@@ -127,11 +127,10 @@ module.exports = {
         switch (command) {
             case "create":
                 try {
-                    const item = await dbItem.createItem({
+                    const item = await dbItem.createItem(pack, {
                         name: name,
                         image: image,
                         rarity: rarity,
-                        pack: pack,
                     });
 
                     await interaction.reply(

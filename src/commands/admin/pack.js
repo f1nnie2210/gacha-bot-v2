@@ -88,9 +88,8 @@ module.exports = {
         const command = interaction.options.getSubcommand();
         const type = interaction.options.getString("type");
         const points = interaction.options.getInteger("points");
-        const rarity = Array.from(
-            { length: 10 },
-            (_, i) => interaction.options.getNumber(`rarity-${i + 1}`) || 0
+        const rarity = Array.from({ length: 10 }, (_, i) =>
+            interaction.options.getNumber(`rarity-${i + 1}`)
         );
 
         switch (command) {

@@ -13,13 +13,12 @@ const Item = mongoose.model(
 
 module.exports = {
     Item,
-    createItem: async (itemData) => {
-        const { packName, name, image, rarity } = itemData;
+    createItem: async (packName, itemData) => {
+        const { name, image, rarity } = itemData;
         const pack = await Pack.findOne({ type: packName });
         if (!pack) {
             throw new Error(`Pack **${packName}** does not exist.`);
         }
-
         const existingItem = await Item.findOne({ name });
         if (existingItem) {
             throw new Error(

@@ -82,7 +82,6 @@ module.exports = {
         const existingRarity = new Map(
             editPack.rarity.map((r) => [r.level, r.rollRate])
         );
-
         const editRarity = Array.from({ length: 10 }, (_, i) => {
             const rollRate = rarityOptions[i];
             if (rollRate === 0) {
