@@ -1,4 +1,4 @@
-const dbUser = require("../../db/userSchema");
+const dbUser = require("../../db/userQueries");
 
 module.exports = {
     name: "pointsview",

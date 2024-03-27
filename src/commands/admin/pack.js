@@ -1,5 +1,4 @@
-const dbPack = require("../../db/packSchema");
-const dbItem = require("../../db/itemSchema");
+const dbPack = require("../../db/packQueries");
 const { PermissionFlagsBits } = require("discord.js");
 
 module.exports = {

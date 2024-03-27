@@ -1,7 +1,8 @@
-const { Pack } = require("../../db/packSchema");
-const dbUser = require("../../db/userSchema");
+const { Pack } = require("../../db/schema/schema");
+const dbUser = require("../../db/userQueries");
 const { EmbedBuilder } = require("discord.js");
 const { rollItem } = require("../../handlers/rollHandle");
+const { getAllAllowedChannels } = require("../../db/channelQueries");
 
 module.exports = {
     name: "roll",
@@ -20,6 +21,18 @@ module.exports = {
             const packName = interaction.options.getString("pack");
             const pack = await Pack.findOne({ type: packName });
 
+            const allowedChannels = await getAllAllowedChannels();
+            if (
+                !allowedChannels.some(
+                    (channel) => channel.channelId === interaction.channel.id
+                )
+            ) {
+                await interaction.reply({
+                    content: `This command can't be executed in this channel.`,
+                    ephemeral: true,
+                });
+                return;
+            }
             if (!pack || !pack.items.length) {
                 let message = `The pack: **${packName}** does not exist.`;
                 if (pack && !pack.items.length) {
@@ -37,9 +50,10 @@ module.exports = {
                 return;
             }
 
+            const item = await rollItem(pack, user);
+
             user.points -= pack.points;
             await user.save();
-            const item = await rollItem(pack);
 
             const embed = new EmbedBuilder()
                 .setTitle(`You rolled an item from pack: ${packName}`)

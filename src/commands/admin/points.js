@@ -1,4 +1,4 @@
-const dbUser = require("../../db/userSchema");
+const dbUser = require("../../db/userQueries");
 const { PermissionFlagsBits } = require("discord.js");
 
 module.exports = {

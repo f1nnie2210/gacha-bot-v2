@@ -2,9 +2,10 @@ Task:
 - roll system (x)
 - detach admin - user system each case (x)
 - switch query to db (x)
-- validate each case
-- improve UI
-- optimize previous code
-- upload image via cloudinary
+- validate each case (x)
+- improve UI (x)
+- optimize previous code (x)
+- stored results of gacha 
+- upload image via cloudinary (pendings)
 - payment method system
 - optimize new code

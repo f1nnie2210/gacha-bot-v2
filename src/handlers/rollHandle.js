@@ -1,7 +1,7 @@
-const { Item } = require("../db/packSchema");
+const { Item, RollResult } = require("../db/schema/schema");
 
 module.exports = {
-    async rollItem(pack) {
+    async rollItem(pack, user) {
         // Calculate the total roll rate
         const totalRollRate = pack.rarity.reduce(
             (total, rarity) => total + rarity.rollRate,
@@ -29,6 +29,19 @@ module.exports = {
                     itemsOfRarity[
                         Math.floor(Math.random() * itemsOfRarity.length)
                     ];
+
+                const rollResult = await RollResult.findOneAndUpdate(
+                    { userId: user.discordId },
+                    {
+                        $push: {
+                            results: {
+                                itemName: item.name,
+                            },
+                        },
+                        $setOnInsert: { inGameName: user.inGameName },
+                    },
+                    { upsert: true, new: true }
+                );
                 return item;
             }
         }

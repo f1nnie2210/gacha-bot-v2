@@ -1,5 +1,5 @@
 const { PermissionFlagsBits } = require("discord.js");
-const dbChannel = require("../../db/channelSchema");
+const dbChannel = require("../../db/channelQueries");
 
 module.exports = {
     name: "channel",

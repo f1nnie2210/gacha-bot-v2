@@ -1,14 +1,7 @@
 const mongoose = require("mongoose");
-
-const AllowedChannel = mongoose.model(
-    "AllowedChannel",
-    new mongoose.Schema({
-        channelId: String,
-    })
-);
+const { AllowedChannel } = require("./schema/schema.js");
 
 module.exports = {
-    AllowedChannel,
     saveAllowedChannel: async (channelId) => {
         const existingChannel = await AllowedChannel.findOne({
             channelId: channelId,

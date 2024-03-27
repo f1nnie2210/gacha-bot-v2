@@ -1,18 +1,7 @@
 const mongoose = require("mongoose");
-const { Pack } = require("./packSchema");
-
-const Item = mongoose.model(
-    "Item",
-    new mongoose.Schema({
-        name: String,
-        image: String,
-        rarity: Number,
-        pack: { type: mongoose.Schema.Types.ObjectId, ref: "Pack" }, // reference to the pack
-    })
-);
+const { Item, Pack } = require("./schema/schema.js");
 
 module.exports = {
-    Item,
     createItem: async (packName, itemData) => {
         const { name, image, rarity } = itemData;
         const pack = await Pack.findOne({ type: packName });

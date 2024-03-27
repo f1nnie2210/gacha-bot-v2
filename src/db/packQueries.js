@@ -1,22 +1,7 @@
 const mongoose = require("mongoose");
-
-const Pack = mongoose.model(
-    "Pack",
-    new mongoose.Schema({
-        type: { type: String, index: true },
-        points: { type: Number, required: true },
-        items: [{ type: mongoose.Schema.Types.ObjectId, ref: "Item" }], // array of references to items
-        rarity: [
-            {
-                level: Number,
-                rollRate: { type: Number, min: 0, max: 100 },
-            },
-        ],
-    })
-);
+const { Pack } = require("./schema/schema.js");
 
 module.exports = {
-    Pack,
     createPack: async (packData) => {
         const existingPack = await Pack.findOne({ type: packData.type });
         if (existingPack) {

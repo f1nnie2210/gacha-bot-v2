@@ -3,7 +3,7 @@ const {
     ButtonTypes,
     ButtonStyles,
 } = require("@devraelfreeze/discordjs-pagination");
-const dbPack = require("../../db/packSchema.js");
+const dbPack = require("../../db/packQueries");
 const { EmbedBuilder } = require("discord.js");
 
 module.exports = {

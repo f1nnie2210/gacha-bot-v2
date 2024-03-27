@@ -3,7 +3,7 @@ const {
     ButtonTypes,
     ButtonStyles,
 } = require("@devraelfreeze/discordjs-pagination");
-const dbItem = require("../../db/itemSchema.js");
+const dbItem = require("../../db/itemQueries");
 const { EmbedBuilder } = require("discord.js");
 const { PermissionFlagsBits } = require("discord.js");
 

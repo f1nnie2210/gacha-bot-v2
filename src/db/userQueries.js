@@ -1,16 +1,5 @@
-const mongoose = require("mongoose");
-
-// Define the User model
-const User = mongoose.model(
-    "User",
-    new mongoose.Schema({
-        discordId: String,
-        name: String,
-        inGameName: String,
-        points: { type: Number, default: 0 },
-    })
-);
-
+const { User } = require("./schema/schema.js");
+const { RollResult } = require("./schema/schema");
 const nameRegex = /^[a-zA-Z]+(_[a-zA-Z]+)*$/;
 
 module.exports = {
@@ -77,7 +66,16 @@ module.exports = {
 
         // Update the user
         Object.assign(user, updates);
-        return await user.save();
+        await user.save();
+
+        if (updates.inGameName) {
+            await RollResult.updateMany(
+                { userId: discordId },
+                { $set: { inGameName: updates.inGameName } }
+            );
+        }
+
+        return user;
     },
 
     deleteUser: async (discordId) => {
